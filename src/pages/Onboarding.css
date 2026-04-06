@@ -1,0 +1,215 @@
+/* Onboarding Styles */
+
+.onboarding {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-xl);
+  max-width: 480px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Progress Dots */
+.onboarding-progress {
+  display: flex;
+  gap: var(--space-sm);
+  justify-content: center;
+  padding: var(--space-lg) 0;
+}
+
+.progress-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  background: var(--bg-surface-3);
+  transition: all var(--transition-base);
+}
+
+.progress-dot.active {
+  width: 24px;
+  background: var(--accent-primary);
+}
+
+.progress-dot.done {
+  background: var(--accent-primary);
+  opacity: 0.4;
+}
+
+/* Content Area */
+.onboarding-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-xl) 0;
+}
+
+.onboarding-title {
+  font-size: var(--font-h1);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  white-space: pre-line;
+  margin-bottom: var(--space-md);
+}
+
+.onboarding-subtitle {
+  font-size: var(--font-body);
+  color: var(--text-secondary);
+  line-height: 1.6;
+  max-width: 320px;
+}
+
+/* Welcome Step */
+.welcome-step {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.welcome-icon-wrapper {
+  width: 80px;
+  height: 80px;
+  border-radius: var(--radius-xl);
+  background: var(--accent-gradient);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--space-xl);
+  color: white;
+  box-shadow: 0 8px 32px rgba(10, 132, 255, 0.3);
+}
+
+/* Focus Step */
+.focus-step {
+  width: 100%;
+}
+
+.focus-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-top: var(--space-xl);
+}
+
+.focus-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md) var(--space-lg);
+  background: var(--bg-surface-1);
+  border: 2px solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  text-align: left;
+  font-family: var(--font-family);
+  width: 100%;
+}
+
+.focus-option:hover {
+  background: var(--bg-surface-2);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.focus-option.selected {
+  border-color: var(--accent-primary);
+  background: rgba(10, 132, 255, 0.08);
+}
+
+.focus-option-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-surface-2);
+  color: var(--accent-primary);
+  flex-shrink: 0;
+}
+
+.focus-option.selected .focus-option-icon {
+  background: rgba(10, 132, 255, 0.15);
+}
+
+.focus-option-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.focus-option-label {
+  font-size: var(--font-body);
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.focus-option-desc {
+  font-size: var(--font-caption);
+  color: var(--text-secondary);
+}
+
+/* Setup Step */
+.setup-step {
+  width: 100%;
+}
+
+.setup-fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  margin-top: var(--space-xl);
+}
+
+.income-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.income-prefix {
+  position: absolute;
+  left: 16px;
+  color: var(--text-secondary);
+  font-size: var(--font-body);
+  font-weight: 500;
+  z-index: 1;
+}
+
+.income-input {
+  padding-left: 36px;
+}
+
+.input-hint {
+  font-size: var(--font-micro);
+  color: var(--text-tertiary);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* Footer */
+.onboarding-footer {
+  padding: var(--space-lg) 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.btn-disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* Number input arrow removal */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
