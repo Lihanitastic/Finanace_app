@@ -29,8 +29,8 @@ A 5-tab bottom bar separates concerns by user intent:
 ```
 ┌──────────────────────────────────────────────────────┐
 │  Home    Activity    Goals    Insights    Debrief    │
-│   📊       ↔️         🎯       📈          🧠       │
-│ overview  logging   saving   analysis  reflection   │
+│   📊       ↔️         🎯       📈          🧠      |
+│ overview  logging   saving   analysis  reflection    │
 └──────────────────────────────────────────────────────┘
 ```
 
@@ -134,7 +134,7 @@ Dashboard "Expense" button
 │  ✕ (Cancel)              ✓ (Confirm)    │  ← Symmetrical header
 │                                          │
 │  ┌──────────────────────────────────┐    │
-│  │     ₹ 0                         │    │  ← Amount display
+│  │     ₹ 0                         │     │  ← Amount display
 │  └──────────────────────────────────┘    │
 │                                          │
 │  ┌───┬───┬───┐                           │
@@ -144,10 +144,10 @@ Dashboard "Expense" button
 │  ├───┼───┼───┤                           │
 │  │ 7 │ 8 │ 9 │                           │
 │  ├───┼───┼───┤                           │
-│  │ . │ 0 │ ⌫ │                           │
+│  │ . │ 0 │ ⌫│                           │
 │  └───┴───┴───┘                           │
 │                                          │
-│  Category: [🏠 Rent] [🍕 Food] [🛒 ...]│  ← Bucket-grouped chips
+│  Category: [🏠 Rent] [🍕 Food] [🛒 ...] │  ← Bucket-grouped chips
 │                                          │
 │  Quick Note: [Swiggy] [Amazon] [Gym]     │  ← Dynamic, category-
 │              [Netflix] [Uber] [...]      │     aware auto-fill
@@ -224,5 +224,3 @@ Notifications are dismissible and feel like the app nagging you. A dedicated tab
 - The 3-bucket categorization covers ~95% of young professional spending patterns
 
 ---
-
-*FinPulse was designed and prototyped as a fully functional React application to demonstrate interaction design, micro-animation quality, and product thinking at a level beyond static mockups.*
