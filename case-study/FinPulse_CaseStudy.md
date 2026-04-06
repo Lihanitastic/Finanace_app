@@ -26,12 +26,18 @@
 ### Navigation Model
 A 5-tab bottom bar separates concerns by user intent:
 
-```
-┌──────────────────────────────────────────────────────┐
-│  Home    Activity    Goals    Insights    Debrief    │
-│   📊       ↔️         🎯       📈          🧠      |
-│ overview  logging   saving   analysis  reflection    │
-└──────────────────────────────────────────────────────┘
+```mermaid
+graph LR
+    subgraph Navigation Model
+    H[Home <br>📊] --> A[Activity <br>↔️]
+    A --> G[Goals <br>🎯]
+    G --> I[Insights <br>📈]
+    I --> D[Debrief <br>🧠]
+    end
+    
+    classDef default fill:#1C1C1E,stroke:#333,stroke-width:2px,color:#fff;
+    classDef highlight fill:#0A84FF,stroke:#000,stroke-width:0px,color:#fff;
+    class H,A,G,I,D default;
 ```
 
 **Why this order?** Users open the app most often to glance (Home) or log (Activity). Goals and Insights are visited weekly. Debrief is intentionally last — it's a dedicated ritual, not a quick check.
@@ -125,35 +131,29 @@ Onboarding (3 steps) → Protected App Shell
 
 This is the most frequent user action, so it must be fast yet intentional.
 
-```
-Dashboard "Expense" button
-    │
-    ▼
-┌─ Add Expense Modal ──────────────────────┐
-│                                          │
-│  ✕ (Cancel)              ✓ (Confirm)    │  ← Symmetrical header
-│                                          │
-│  ┌──────────────────────────────────┐    │
-│  │     ₹ 0                         │     │  ← Amount display
-│  └──────────────────────────────────┘    │
-│                                          │
-│  ┌───┬───┬───┐                           │
-│  │ 1 │ 2 │ 3 │                           │
-│  ├───┼───┼───┤                           │  ← Custom UPI-style
-│  │ 4 │ 5 │ 6 │                           │     numeric keypad
-│  ├───┼───┼───┤                           │
-│  │ 7 │ 8 │ 9 │                           │
-│  ├───┼───┼───┤                           │
-│  │ . │ 0 │ ⌫│                           │
-│  └───┴───┴───┘                           │
-│                                          │
-│  Category: [🏠 Rent] [🍕 Food] [🛒 ...] │  ← Bucket-grouped chips
-│                                          │
-│  Quick Note: [Swiggy] [Amazon] [Gym]     │  ← Dynamic, category-
-│              [Netflix] [Uber] [...]      │     aware auto-fill
-│                                          │
-│  ☐ One-time / Annual expense             │  ← Trend exclusion
-└──────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    Trigger([Home: Tap 'Add Expense']) --> Modal[Add Expense Modal Opens]
+    
+    subgraph Custom Numpad & Layout
+        Modal --> Amount[User inputs ₹12,000 using custom 3x4 Numpad]
+        Amount --> Categorize{Select Category}
+        Categorize --> |Necessities| Rent[Rent / EMI]
+        Categorize --> |Discretionary| Food[Dining / Swiggy]
+        Food --> Notes[Quick Fill Chip: 'Swiggy']
+    end
+    
+    Notes --> Decision{Is this a recurring <br>trend?}
+    Decision -->|Yes| Confirm([Confirm & Save])
+    Decision -->|No, it's annual| Toggle[Enable 'One-Off' Exclusion Toggle]
+    Toggle --> Confirm
+    
+    classDef trigger fill:#1C1C1E,stroke:#0A84FF,stroke-width:2px,color:#fff;
+    classDef action fill:#0A84FF,stroke:#000,stroke-width:0px,color:#fff;
+    classDef decision fill:#30D158,stroke:#000,stroke-width:0px,color:#111;
+    class Trigger,Confirm trigger;
+    class Amount,Categorize,Notes action;
+    class Decision,Toggle decision;
 ```
 
 ### Key Interaction Decisions:
@@ -224,3 +224,5 @@ Notifications are dismissible and feel like the app nagging you. A dedicated tab
 - The 3-bucket categorization covers ~95% of young professional spending patterns
 
 ---
+
+*FinPulse was designed and prototyped as a fully functional React application to demonstrate interaction design, micro-animation quality, and product thinking at a level beyond static mockups.*
