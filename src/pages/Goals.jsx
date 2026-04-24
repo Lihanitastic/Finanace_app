@@ -1,9 +1,8 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, X, Trophy, Calendar, TrendingUp } from 'lucide-react';
-import { mockGoals } from '../data/mockGoals';
-import { getItem, setItem, STORAGE_KEYS } from '../data/storage';
+import api from '../utils/api';
 import { formatCurrency, formatCompact } from '../utils/formatCurrency';
 import { getDaysLeft } from '../utils/dateHelpers';
 import './Goals.css';
@@ -12,49 +11,61 @@ const GOAL_ICONS = ['🛡️', '💻', '🏖️', '🚗', '🏠', '📚', '💍'
 
 export default function Goals() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [goals, setGoals] = useState(() => getItem(STORAGE_KEYS.GOALS) || mockGoals);
+  const [goals, setGoals] = useState([]);
   const [showNewGoal, setShowNewGoal] = useState(searchParams.get('new') === 'true');
   const [selectedGoal, setSelectedGoal] = useState(null);
   const [addAmount, setAddAmount] = useState('');
+  const [loading, setLoading] = useState(true);
 
   // New goal form
   const [newGoal, setNewGoal] = useState({ name: '', icon: '🎯', target: '', deadline: '' });
 
+  useEffect(() => {
+    const fetchGoals = async () => {
+      try {
+        const { data } = await api.get('/goals');
+        setGoals(data);
+      } catch (err) {
+        console.error("Failed to fetch goals", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchGoals();
+  }, []);
+
   const totalSaved = useMemo(() => goals.reduce((s, g) => s + g.saved, 0), [goals]);
   const totalTarget = useMemo(() => goals.reduce((s, g) => s + g.target, 0), [goals]);
 
-  const handleCreateGoal = () => {
+  const handleCreateGoal = async () => {
     if (!newGoal.name.trim() || !newGoal.target) return;
-    const goal = {
-      id: `g${Date.now()}`,
-      name: newGoal.name,
-      icon: newGoal.icon,
-      target: parseInt(newGoal.target),
-      saved: 0,
-      deadline: newGoal.deadline || null,
-      color: '#0A84FF',
-      createdAt: new Date().toISOString(),
-    };
-    const updated = [...goals, goal];
-    setGoals(updated);
-    setItem(STORAGE_KEYS.GOALS, updated);
-    setNewGoal({ name: '', icon: '🎯', target: '', deadline: '' });
-    setShowNewGoal(false);
-    setSearchParams({});
+    try {
+      const { data } = await api.post('/goals', {
+        name: newGoal.name,
+        icon: newGoal.icon,
+        target: parseInt(newGoal.target),
+        deadline: newGoal.deadline || null,
+        color: '#0A84FF',
+      });
+      setGoals([data, ...goals]);
+      setNewGoal({ name: '', icon: '🎯', target: '', deadline: '' });
+      setShowNewGoal(false);
+      setSearchParams({});
+    } catch (err) {
+      console.error("Failed to create goal", err);
+    }
   };
 
-  const handleAddMoney = (goalId) => {
+  const handleAddMoney = async (goalId) => {
     if (!addAmount) return;
-    const updated = goals.map(g => {
-      if (g.id === goalId) {
-        return { ...g, saved: Math.min(g.target, g.saved + parseInt(addAmount)) };
-      }
-      return g;
-    });
-    setGoals(updated);
-    setItem(STORAGE_KEYS.GOALS, updated);
-    setAddAmount('');
-    setSelectedGoal(null);
+    try {
+      const { data } = await api.put(`/goals/${goalId}`, { amount: parseInt(addAmount) });
+      setGoals(goals.map(g => (g.id === goalId ? data : g)));
+      setAddAmount('');
+      setSelectedGoal(null);
+    } catch (err) {
+      console.error("Failed to add money", err);
+    }
   };
 
   return (

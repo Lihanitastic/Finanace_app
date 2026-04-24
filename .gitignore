@@ -24,3 +24,5 @@ dist-ssr
 *.sw?
 
 .vercel
+backend/.env
+deploy_output.txt

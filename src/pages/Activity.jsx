@@ -1,19 +1,20 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Search, ArrowUpRight, ArrowDownLeft, X, AlertCircle, Delete, Check } from 'lucide-react';
-import { BUCKETS, CATEGORIES, mockTransactions } from '../data/mockTransactions';
-import { getItem, setItem, STORAGE_KEYS } from '../data/storage';
+import { BUCKETS, CATEGORIES } from '../data/mockTransactions';
+import api from '../utils/api';
 import { formatCurrency } from '../utils/formatCurrency';
 import { groupByDate, formatTime } from '../utils/dateHelpers';
 import './Activity.css';
 
 export default function Activity() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [transactions, setTransactions] = useState(() => getItem(STORAGE_KEYS.TRANSACTIONS) || mockTransactions);
+  const [transactions, setTransactions] = useState([]);
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [showAddModal, setShowAddModal] = useState(searchParams.get('add') || null);
+  const [loading, setLoading] = useState(true);
 
   // Add transaction form state
   const [newTx, setNewTx] = useState({ type: 'expense', amount: '', category: 'food', note: '', isOneOff: false });
@@ -30,6 +31,20 @@ export default function Activity() {
     rent: ['Rent', 'Maintenance'],
     default: ['Regular', 'One-time']
   };
+
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      try {
+        const { data } = await api.get('/transactions');
+        setTransactions(data);
+      } catch (err) {
+        console.error("Failed to load transactions", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTransactions();
+  }, []);
 
   const handleKeypadPress = (key) => {
     if (key === 'clear') {
@@ -61,25 +76,25 @@ export default function Activity() {
 
   const grouped = useMemo(() => groupByDate(filtered), [filtered]);
 
-  const handleAddTransaction = () => {
+  const handleAddTransaction = async () => {
     if (!newTx.amount || !newTx.note.trim()) return;
 
-    const tx = {
-      id: `t${Date.now()}`,
-      type: newTx.type,
-      amount: parseInt(newTx.amount),
-      category: newTx.category,
-      note: newTx.note,
-      date: new Date().toISOString(),
-      isOneOff: newTx.isOneOff
-    };
+    try {
+      const { data } = await api.post('/transactions', {
+        type: newTx.type,
+        amount: parseInt(newTx.amount),
+        category: newTx.category,
+        note: newTx.note,
+        isOneOff: newTx.isOneOff
+      });
 
-    const updated = [tx, ...transactions];
-    setTransactions(updated);
-    setItem(STORAGE_KEYS.TRANSACTIONS, updated);
-    setNewTx({ type: 'expense', amount: '', category: 'food', note: '', isOneOff: false });
-    setShowAddModal(null);
-    setSearchParams({});
+      setTransactions([data, ...transactions]);
+      setNewTx({ type: 'expense', amount: '', category: 'food', note: '', isOneOff: false });
+      setShowAddModal(null);
+      setSearchParams({});
+    } catch (err) {
+      console.error("Failed to save transaction", err);
+    }
   };
 
   const categoryKeys = Object.keys(CATEGORIES);

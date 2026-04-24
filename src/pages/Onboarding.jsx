@@ -1,10 +1,8 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, TrendingUp, PiggyBank, BarChart3, Sparkles } from 'lucide-react';
-import { setItem, STORAGE_KEYS } from '../data/storage';
-import { mockTransactions } from '../data/mockTransactions';
-import { mockGoals } from '../data/mockGoals';
+import api from '../utils/api';
 import './Onboarding.css';
 
 const steps = [
@@ -32,23 +30,53 @@ const steps = [
   },
 ];
 
+const validateEmail = (email) => {
+  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return re.test(email);
+};
+
 export default function Onboarding() {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [focus, setFocus] = useState(null);
+  
+  // Registration data
   const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleComplete = () => {
-    const userData = {
-      name: name || 'Friend',
-      focus: focus || 'track',
-      joinedAt: new Date().toISOString(),
-    };
-    setItem(STORAGE_KEYS.USER, userData);
-    setItem(STORAGE_KEYS.TRANSACTIONS, mockTransactions);
-    setItem(STORAGE_KEYS.GOALS, mockGoals);
-    setItem(STORAGE_KEYS.ONBOARDED, true);
-    navigate('/', { replace: true });
+  const handleComplete = async () => {
+    if (!name || !validateEmail(email) || !password) return;
+    
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      const { data } = await api.post('/auth/register', { 
+        name, 
+        email, 
+        password, 
+        focus,
+        employmentType: 'salaried' 
+      });
+      
+      // Keep token in localstorage
+      localStorage.setItem('finpulse_token', data.token);
+      localStorage.setItem('finpulse_user', JSON.stringify({
+        name: data.name,
+        email: data.email,
+        focus: data.focus,
+        employmentType: data.employmentType
+      }));
+      
+      navigate('/', { replace: true });
+    } catch (err) {
+      setError(err.response?.data?.error || 'Registration failed');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const nextStep = () => {
@@ -57,7 +85,9 @@ export default function Onboarding() {
   };
 
   const currentStep = steps[step];
-  const canProceed = step === 0 || (step === 1 && focus) || (step === 2 && name.trim());
+  const canProceed = step === 0 || 
+    (step === 1 && focus) || 
+    (step === 2 && name.trim() && validateEmail(email) && password.length >= 6 && !isSubmitting);
 
   return (
     <div className="onboarding">
@@ -85,6 +115,9 @@ export default function Onboarding() {
               </div>
               <h1 className="onboarding-title">{currentStep.title}</h1>
               <p className="onboarding-subtitle">{currentStep.subtitle}</p>
+              <p style={{ marginTop: '24px', color: 'var(--text-secondary)' }}>
+                Already have an account? <Link to="/login" style={{ color: 'var(--accent-primary)', textDecoration: 'none' }}>Log in here</Link>
+              </p>
             </div>
           )}
 
@@ -117,8 +150,11 @@ export default function Onboarding() {
             <div className="setup-step">
               <h1 className="onboarding-title">{currentStep.title}</h1>
               <p className="onboarding-subtitle">{currentStep.subtitle}</p>
-              <div className="setup-fields">
-                <div className="input-group">
+              
+              {error && <div className="error-message" style={{ color: 'var(--color-expense)', marginBottom: '16px' }}>{error}</div>}
+
+              <div className="setup-fields" style={{ textAlign: 'left' }}>
+                <div className="input-group" style={{ marginBottom: '12px' }}>
                   <label className="input-label">What should we call you?</label>
                   <input
                     className="input"
@@ -128,6 +164,29 @@ export default function Onboarding() {
                     onChange={e => setName(e.target.value)}
                     autoFocus
                     id="onboarding-name"
+                  />
+                </div>
+                
+                <div className="input-group" style={{ marginBottom: '12px' }}>
+                  <label className="input-label">Email</label>
+                  <input
+                    className="input"
+                    type="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                  />
+                  {email && !validateEmail(email) && <span style={{ fontSize: '11px', color: 'var(--color-expense)' }}>Invalid email format</span>}
+                </div>
+
+                <div className="input-group">
+                  <label className="input-label">Password</label>
+                  <input
+                    className="input"
+                    type="password"
+                    placeholder="Min 6 chars"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
                   />
                 </div>
               </div>
@@ -144,15 +203,11 @@ export default function Onboarding() {
           disabled={!canProceed}
           id="onboarding-next"
         >
-          {step === 0 ? 'Get Started' : step === steps.length - 1 ? 'Let\'s Go' : 'Continue'}
-          <ArrowRight size={20} />
+          {isSubmitting ? 'Creating...' : step === 0 ? 'Get Started' : step === steps.length - 1 ? 'Let\'s Go' : 'Continue'}
+          {!isSubmitting && <ArrowRight size={20} />}
         </button>
-        {step === 2 && (
-          <button className="btn btn-ghost btn-full" onClick={handleComplete} id="onboarding-skip">
-            Skip for now
-          </button>
-        )}
       </div>
     </div>
   );
 }
+

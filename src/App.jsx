@@ -1,42 +1,63 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { getItem, STORAGE_KEYS } from './data/storage';
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import BottomNav from './components/BottomNav';
 import Onboarding from './pages/Onboarding';
+import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Activity from './pages/Activity';
 import Goals from './pages/Goals';
 import Insights from './pages/Insights';
 import MoneyDebrief from './pages/MoneyDebrief';
 import Profile from './pages/Profile';
+import './index.css';
 
-function AppLayout({ children }) {
+// Protected Route Wrapper
+const ProtectedRoute = () => {
+  const token = localStorage.getItem('finpulse_token');
+  if (!token) {
+    return <Navigate to="/onboarding" replace />;
+  }
   return (
     <>
-      {children}
+      <Outlet />
       <BottomNav />
     </>
   );
+};
+
+const PublicRoute = ({ children }) => {
+  const token = localStorage.getItem('finpulse_token');
+  if (token) {
+    return <Navigate to="/" replace />;
+  }
+  return children;
 }
 
-function ProtectedRoute({ children }) {
-  const isOnboarded = getItem(STORAGE_KEYS.ONBOARDED);
-  if (!isOnboarded) return <Navigate to="/onboarding" replace />;
-  return <AppLayout>{children}</AppLayout>;
-}
-
-export default function App() {
+function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/onboarding" element={<Onboarding />} />
-        <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-        <Route path="/activity" element={<ProtectedRoute><Activity /></ProtectedRoute>} />
-        <Route path="/goals" element={<ProtectedRoute><Goals /></ProtectedRoute>} />
-        <Route path="/insights" element={<ProtectedRoute><Insights /></ProtectedRoute>} />
-        <Route path="/debrief" element={<ProtectedRoute><MoneyDebrief /></ProtectedRoute>} />
-        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <div className="app-container">
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/onboarding" element={<PublicRoute><Onboarding /></PublicRoute>} />
+          <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+          
+          {/* Protected Routes */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/activity" element={<Activity />} />
+            <Route path="/goals" element={<Goals />} />
+            <Route path="/insights" element={<Insights />} />
+            <Route path="/debrief" element={<MoneyDebrief />} />
+          </Route>
+          
+          {/* Profile doesn't have bottom nav usually, but let's keep it consistent or standard */}
+          <Route path="/profile" element={
+            localStorage.getItem('finpulse_token') ? <Profile /> : <Navigate to="/onboarding" replace />
+          } />
+        </Routes>
+      </div>
     </BrowserRouter>
   );
 }
+
+export default App;

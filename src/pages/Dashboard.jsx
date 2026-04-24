@@ -2,13 +2,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Plus, ArrowUpRight, ArrowDownLeft, Target, Brain, ChevronRight } from 'lucide-react';
-import { CATEGORIES, mockTransactions } from '../data/mockTransactions';
-import { mockGoals } from '../data/mockGoals';
-import { getItem, setItem, STORAGE_KEYS } from '../data/storage';
+import { CATEGORIES } from '../data/mockTransactions';
 import { formatCurrency } from '../utils/formatCurrency';
 import { getGreeting, getMonthName, formatDate, formatTime } from '../utils/dateHelpers';
 import { getScoreLabel, mockDebriefHistory } from '../utils/calculateDebrief';
 import AnimatedNumber from '../components/AnimatedNumber';
+import api from '../utils/api';
 import './Dashboard.css';
 
 const container = {
@@ -26,15 +25,31 @@ const item = {
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const user = getItem(STORAGE_KEYS.USER) || { name: 'there' };
+  const [user, setUser] = useState({ name: 'there' });
   const [transactions, setTransactions] = useState([]);
   const [goals, setGoals] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const stored = getItem(STORAGE_KEYS.TRANSACTIONS) || mockTransactions;
-    setTransactions(stored);
-    const storedGoals = getItem(STORAGE_KEYS.GOALS) || mockGoals;
-    setGoals(storedGoals);
+    const fetchData = async () => {
+      try {
+        const storedUser = JSON.parse(localStorage.getItem('finpulse_user') || '{}');
+        if (storedUser.name) setUser(storedUser);
+
+        const [txRes, goalsRes] = await Promise.all([
+          api.get('/transactions'),
+          api.get('/goals')
+        ]);
+        
+        setTransactions(txRes.data);
+        setGoals(goalsRes.data);
+      } catch (error) {
+        console.error("Failed to load data", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
   }, []);
 
   // Calculate metrics

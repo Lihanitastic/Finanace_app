@@ -1,30 +1,44 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, User, Wallet, Bell, Trash2, LogOut } from 'lucide-react';
-import { getItem, setItem, clearAll, STORAGE_KEYS } from '../data/storage';
-import { formatCurrency } from '../utils/formatCurrency';
+import api from '../utils/api';
 import './Profile.css';
 
 export default function Profile() {
   const navigate = useNavigate();
-  const [user, setUser] = useState(() => getItem(STORAGE_KEYS.USER) || {});
-  const [name, setName] = useState(user.name || '');
-  const [employmentType, setEmploymentType] = useState(user.employmentType || 'salaried');
+  const [user, setUser] = useState({});
+  const [name, setName] = useState('');
+  const [employmentType, setEmploymentType] = useState('salaried');
   const [saved, setSaved] = useState(false);
 
-  const handleSave = () => {
-    const updated = { ...user, name, employmentType };
-    setItem(STORAGE_KEYS.USER, updated);
-    setUser(updated);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem('finpulse_user') || '{}');
+    setUser(storedUser);
+    setName(storedUser.name || '');
+    setEmploymentType(storedUser.employmentType || 'salaried');
+  }, []);
+
+  const handleSave = async () => {
+    try {
+      const { data } = await api.put('/auth/me', { name, employmentType });
+      const updated = { ...user, name: data.name, employmentType: data.employmentType };
+      localStorage.setItem('finpulse_user', JSON.stringify(updated));
+      setUser(updated);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (err) {
+      console.error("Failed to update profile", err);
+    }
   };
 
   const handleReset = () => {
-    if (window.confirm('This will clear all your data and start fresh. Continue?')) {
-      clearAll();
-      navigate('/onboarding', { replace: true });
+    if (window.confirm('This will log you out. Continue?')) {
+      localStorage.removeItem('finpulse_token');
+      localStorage.removeItem('finpulse_user');
+      localStorage.removeItem('finpulse_insight_widgets');
+      localStorage.removeItem('finpulse_debrief');
+      navigate('/login', { replace: true });
     }
   };
 

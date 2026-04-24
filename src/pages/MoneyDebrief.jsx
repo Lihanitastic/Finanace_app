@@ -1,11 +1,11 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Brain, ArrowRight, Flame, RotateCcw, ChevronRight, Sparkles } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
-import { CATEGORIES, mockTransactions } from '../data/mockTransactions';
-import { getItem, setItem, STORAGE_KEYS } from '../data/storage';
+import { CATEGORIES } from '../data/mockTransactions';
+import api from '../utils/api';
 import { formatCurrency } from '../utils/formatCurrency';
-import { calculateDebriefScore, getScoreLabel, getDebriefInsight, mockDebriefHistory } from '../utils/calculateDebrief';
+import { calculateDebriefScore, getScoreLabel, getDebriefInsight } from '../utils/calculateDebrief';
 import './MoneyDebrief.css';
 
 const FEELINGS = [
@@ -17,11 +17,21 @@ const FEELINGS = [
 ];
 
 export default function MoneyDebrief() {
-  const transactions = getItem(STORAGE_KEYS.TRANSACTIONS) || mockTransactions;
-  const user = getItem(STORAGE_KEYS.USER) || { income: 45000 };
-  const [debriefHistory, setDebriefHistory] = useState(() =>
-    getItem(STORAGE_KEYS.DEBRIEF) || mockDebriefHistory
-  );
+  const [transactions, setTransactions] = useState([]);
+  const [debriefHistory, setDebriefHistory] = useState(() => {
+    const saved = localStorage.getItem('finpulse_debrief');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [user, setUser] = useState({ income: 45000 });
+
+  useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem('finpulse_user') || '{}');
+    if (storedUser.name) setUser(storedUser);
+
+    api.get('/transactions')
+      .then(res => setTransactions(res.data))
+      .catch(console.error);
+  }, []);
 
   const [isCheckinActive, setIsCheckinActive] = useState(false);
   const [checkinStep, setCheckinStep] = useState(0);
@@ -92,7 +102,7 @@ export default function MoneyDebrief() {
 
     const updated = [newEntry, ...debriefHistory];
     setDebriefHistory(updated);
-    setItem(STORAGE_KEYS.DEBRIEF, updated);
+    localStorage.setItem('finpulse_debrief', JSON.stringify(updated));
   };
 
   const resetCheckin = () => {

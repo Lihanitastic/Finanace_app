@@ -2,8 +2,8 @@ import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { Settings, Plus, X, Utensils, ShoppingBag, CreditCard, RefreshCw, AlertCircle, CheckCircle2 } from 'lucide-react';
-import { BUCKETS, CATEGORIES, mockTransactions } from '../data/mockTransactions';
-import { getItem, setItem, STORAGE_KEYS } from '../data/storage';
+import { BUCKETS, CATEGORIES } from '../data/mockTransactions';
+import api from '../utils/api';
 import { formatCurrency, formatCompact } from '../utils/formatCurrency';
 import './Insights.css';
 
@@ -24,18 +24,26 @@ const WIDGET_DEF = {
 };
 
 export default function Insights() {
-  const transactions = getItem(STORAGE_KEYS.TRANSACTIONS) || mockTransactions;
+  const [transactions, setTransactions] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   // Manage Widgets State
   const [activeWidgets, setActiveWidgets] = useState(() => {
-    const saved = getItem('finpulse_insight_widgets');
-    return saved || ['nutrition', 'emi', 'flash_sale', 'subs'];
+    const saved = localStorage.getItem('finpulse_insight_widgets');
+    return saved ? JSON.parse(saved) : ['nutrition', 'emi', 'flash_sale', 'subs'];
   });
   const [showManager, setShowManager] = useState(false);
 
   useEffect(() => {
-    setItem('finpulse_insight_widgets', activeWidgets);
+    localStorage.setItem('finpulse_insight_widgets', JSON.stringify(activeWidgets));
   }, [activeWidgets]);
+
+  useEffect(() => {
+    api.get('/transactions')
+      .then(res => setTransactions(res.data))
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
 
   const toggleWidget = (id) => {
     if (activeWidgets.includes(id)) {
