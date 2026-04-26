@@ -79,6 +79,7 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: var(--space-md);
+  flex-shrink: 0;
 }
 
 .modal-header.symmetrical h2 {
@@ -287,19 +288,19 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-xs);
-  padding: var(--space-lg) 0;
-  margin-bottom: var(--space-md);
+  padding: var(--space-md) 0;
+  margin-bottom: var(--space-sm);
   border-bottom: 1px solid var(--border-color);
 }
 
 .currency-symbol {
-  font-size: 32px;
+  font-size: 24px;
   color: var(--text-tertiary);
   font-weight: 500;
 }
 
 .amount-text {
-  font-size: 48px;
+  font-size: 36px;
   font-weight: 800;
   letter-spacing: -1px;
   color: var(--text-primary);
@@ -312,16 +313,16 @@
 .custom-keypad {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-sm);
-  margin-bottom: var(--space-lg);
+  gap: 6px;
+  margin-bottom: var(--space-md);
 }
 
 .keypad-btn {
   background: var(--bg-surface-3);
   border: none;
-  border-radius: var(--radius-lg);
-  height: 64px;
-  font-size: 28px;
+  border-radius: var(--radius-md);
+  height: 48px;
+  font-size: 22px;
   font-weight: 500;
   color: var(--text-primary);
   display: flex;
@@ -339,7 +340,7 @@
 .keypad-btn.action-key {
   background: transparent;
   color: var(--text-secondary);
-  font-size: 24px;
+  font-size: 20px;
 }
 
 /* Quick Chips */

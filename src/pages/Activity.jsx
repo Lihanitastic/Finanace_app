@@ -350,7 +350,7 @@ export default function Activity() {
 
                 {/* One-off Toggle (Expenses only) */}
                 {newTx.type === 'expense' && (
-                  <div className="oneoff-toggle-container" style={{ marginBottom: 'var(--space-xl)' }}>
+                  <div className="oneoff-toggle-container" style={{ marginBottom: 'var(--space-md)' }}>
                     <label className="oneoff-toggle">
                       <input 
                         type="checkbox" 
@@ -366,6 +366,17 @@ export default function Activity() {
                     </label>
                   </div>
                 )}
+
+                {/* Submit Button */}
+                <button
+                  className={`btn btn-primary btn-full btn-lg ${(!newTx.amount || !newTx.note.trim()) ? 'btn-disabled' : ''}`}
+                  onClick={handleAddTransaction}
+                  disabled={!newTx.amount || !newTx.note.trim()}
+                  id="submit-transaction"
+                  style={{ marginBottom: 'var(--space-lg)' }}
+                >
+                  {newTx.type === 'expense' ? 'Add Expense' : 'Add Income'}
+                </button>
               </div>
             </motion.div>
           </motion.div>

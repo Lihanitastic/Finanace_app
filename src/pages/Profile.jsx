@@ -32,14 +32,10 @@ export default function Profile() {
     }
   };
 
-  const handleReset = () => {
-    if (window.confirm('This will log you out. Continue?')) {
-      localStorage.removeItem('finpulse_token');
-      localStorage.removeItem('finpulse_user');
-      localStorage.removeItem('finpulse_insight_widgets');
-      localStorage.removeItem('finpulse_debrief');
-      navigate('/login', { replace: true });
-    }
+  const handleLogout = () => {
+    localStorage.removeItem('finpulse_token');
+    localStorage.removeItem('finpulse_user');
+    window.location.href = '/login';
   };
 
   return (
@@ -115,11 +111,11 @@ export default function Profile() {
       </button>
 
       <div className="settings-section" style={{marginTop: 'var(--space-xl)'}}>
-        <h3 className="section-title" style={{marginBottom: 'var(--space-md)'}}>Data</h3>
+        <h3 className="section-title" style={{marginBottom: 'var(--space-md)'}}>Account</h3>
         <div className="settings-card card">
-          <button className="setting-row setting-btn danger" onClick={handleReset} id="profile-reset">
-            <div className="setting-icon"><Trash2 size={18} /></div>
-            <span className="setting-label">Reset All Data</span>
+          <button className="setting-row setting-btn" onClick={handleLogout} id="profile-logout">
+            <div className="setting-icon"><LogOut size={18} /></div>
+            <span className="setting-label" style={{color: 'var(--color-warning)'}}>Log Out</span>
           </button>
         </div>
       </div>

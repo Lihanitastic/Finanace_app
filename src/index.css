@@ -534,9 +534,9 @@ body {
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   width: 100%;
   max-width: 480px;
-  max-height: 90vh;
+  max-height: 85vh;
   overflow-y: auto;
-  padding: var(--space-lg);
+  padding: var(--space-md) var(--space-lg);
   border-top: var(--border-medium);
 }
 

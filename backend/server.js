@@ -6,6 +6,7 @@ import path from 'path';
 import authRoutes from './routes/authRoutes.js';
 import transactionRoutes from './routes/transactionRoutes.js';
 import goalRoutes from './routes/goalRoutes.js';
+import aiRoutes from './routes/aiRoutes.js';
 import pool from './config/db.js';
 
 dotenv.config({ path: path.resolve(process.cwd(), '.env') });
@@ -21,6 +22,7 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/goals', goalRoutes);
+app.use('/api/ai', aiRoutes);
 
 // Test DB Connection and Start Server
 pool.getConnection()

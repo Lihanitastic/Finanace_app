@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Brain, ArrowRight, Flame, RotateCcw, ChevronRight, Sparkles } from 'lucide-react';
+import { Brain, ArrowRight, Flame, RotateCcw, ChevronRight, Sparkles, Bot, Loader2 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
 import { CATEGORIES } from '../data/mockTransactions';
 import api from '../utils/api';
@@ -41,6 +41,15 @@ export default function MoneyDebrief() {
   const [showResult, setShowResult] = useState(false);
   const [resultScore, setResultScore] = useState(null);
 
+  // AI Recommendation state
+  const [aiRecommendation, setAiRecommendation] = useState(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState(false);
+  const [typedInsight, setTypedInsight] = useState('');
+  const [typedAction, setTypedAction] = useState('');
+  const [typedEncouragement, setTypedEncouragement] = useState('');
+  const [typingPhase, setTypingPhase] = useState(0); // 0=not started, 1=insight, 2=action, 3=encouragement, 4=done
+
   // This week's top expense categories (EXCLUDING Mandatory & One-offs)
   const weekCategories = useMemo(() => {
     const weekAgo = new Date();
@@ -71,6 +80,34 @@ export default function MoneyDebrief() {
       prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
     );
   };
+
+  // Typing animation effect
+  useEffect(() => {
+    if (!aiRecommendation || typingPhase === 0) return;
+
+    const fields = [
+      { key: 'keyInsight', setter: setTypedInsight, phase: 1 },
+      { key: 'actionStep', setter: setTypedAction, phase: 2 },
+      { key: 'encouragement', setter: setTypedEncouragement, phase: 3 },
+    ];
+
+    const current = fields.find(f => f.phase === typingPhase);
+    if (!current) return;
+
+    const fullText = aiRecommendation[current.key] || '';
+    let charIndex = 0;
+
+    const interval = setInterval(() => {
+      charIndex++;
+      current.setter(fullText.slice(0, charIndex));
+      if (charIndex >= fullText.length) {
+        clearInterval(interval);
+        setTimeout(() => setTypingPhase(prev => prev + 1), 200);
+      }
+    }, 18); // ~55 chars/sec — fast but readable
+
+    return () => clearInterval(interval);
+  }, [aiRecommendation, typingPhase]);
 
   const handleComplete = () => {
     const spendingRatio = totalWeekSpent / (user.income || 45000);
@@ -103,6 +140,34 @@ export default function MoneyDebrief() {
     const updated = [newEntry, ...debriefHistory];
     setDebriefHistory(updated);
     localStorage.setItem('finpulse_debrief', JSON.stringify(updated));
+
+    // Fire AI recommendation request
+    setAiLoading(true);
+    setAiError(false);
+    setAiRecommendation(null);
+    setTypedInsight('');
+    setTypedAction('');
+    setTypedEncouragement('');
+    setTypingPhase(0);
+
+    api.post('/ai/debrief', {
+      feeling,
+      regrets,
+      win,
+      score,
+      history: debriefHistory.slice(0, 8), // send recent history for trend analysis
+    })
+      .then(res => {
+        setAiRecommendation(res.data.recommendation);
+        setAiLoading(false);
+        // Start typing animation after a short delay for the score to animate
+        setTimeout(() => setTypingPhase(1), 1200);
+      })
+      .catch(err => {
+        console.error('AI recommendation failed:', err);
+        setAiLoading(false);
+        setAiError(true);
+      });
   };
 
   const resetCheckin = () => {
@@ -113,6 +178,39 @@ export default function MoneyDebrief() {
     setWin('');
     setShowResult(false);
     setResultScore(null);
+    setAiRecommendation(null);
+    setAiLoading(false);
+    setAiError(false);
+    setTypedInsight('');
+    setTypedAction('');
+    setTypedEncouragement('');
+    setTypingPhase(0);
+  };
+
+  const handleGeneralAnalysis = () => {
+    setAiLoading(true);
+    setAiError(false);
+    setAiRecommendation(null);
+    setTypedInsight('');
+    setTypedAction('');
+    setTypedEncouragement('');
+    setTypingPhase(0);
+
+    // Call the same AI endpoint but without specific weekly feeling data 
+    // to trigger the general holistic analysis fallback we just added to the backend
+    api.post('/ai/debrief', {
+      history: debriefHistory.slice(0, 8),
+    })
+      .then(res => {
+        setAiRecommendation(res.data.recommendation);
+        setAiLoading(false);
+        setTimeout(() => setTypingPhase(1), 200);
+      })
+      .catch(err => {
+        console.error('AI recommendation failed:', err);
+        setAiLoading(false);
+        setAiError(true);
+      });
   };
 
   const scoreInfo = resultScore !== null ? getScoreLabel(resultScore) : null;
@@ -333,13 +431,66 @@ export default function MoneyDebrief() {
               </div>
             </div>
 
+            {/* AI Recommendation Card */}
             <motion.div
-              className="result-insight card"
+              className="ai-recommendation-card"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1 }}
             >
-              <p className="insight-text">{insight}</p>
+              <div className="ai-card-header">
+                <div className="ai-card-icon">
+                  <Bot size={18} />
+                </div>
+                <span className="ai-card-title">FinPulse AI</span>
+                {aiLoading && <Loader2 size={16} className="ai-spinner" />}
+              </div>
+
+              {aiLoading && (
+                <div className="ai-skeleton">
+                  <div className="ai-skeleton-line long" />
+                  <div className="ai-skeleton-line medium" />
+                  <div className="ai-skeleton-line short" />
+                </div>
+              )}
+
+              {aiError && (
+                <div className="ai-fallback">
+                  <p className="insight-text">{insight}</p>
+                </div>
+              )}
+
+              {aiRecommendation && !aiLoading && (
+                <div className="ai-content">
+                  {typedInsight && (
+                    <div className="ai-section">
+                      <span className="ai-section-label">💡 Key Insight</span>
+                      <p className="ai-section-text">
+                        {typedInsight}
+                        {typingPhase === 1 && <span className="ai-cursor" />}
+                      </p>
+                    </div>
+                  )}
+                  {typedAction && (
+                    <div className="ai-section">
+                      <span className="ai-section-label">🎯 This Week</span>
+                      <p className="ai-section-text">
+                        {typedAction}
+                        {typingPhase === 2 && <span className="ai-cursor" />}
+                      </p>
+                    </div>
+                  )}
+                  {typedEncouragement && (
+                    <div className="ai-section">
+                      <span className="ai-section-label">💪 Keep Going</span>
+                      <p className="ai-section-text">
+                        {typedEncouragement}
+                        {typingPhase === 3 && <span className="ai-cursor" />}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
             </motion.div>
 
             {win && (
@@ -411,6 +562,84 @@ export default function MoneyDebrief() {
                 <span className="stat-value">{Math.round(debriefHistory.reduce((s, d) => s + d.score, 0) / (debriefHistory.length || 1))}</span>
                 <span className="stat-label">Avg Score</span>
               </div>
+            </div>
+
+            {/* AI Review On-Demand */}
+            <div style={{ marginBottom: 'var(--space-lg)' }}>
+              {!aiRecommendation && !aiLoading && !aiError ? (
+                <button 
+                  className="btn btn-secondary btn-full" 
+                  onClick={handleGeneralAnalysis}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', background: 'rgba(10, 132, 255, 0.1)', color: 'var(--accent-primary)', borderColor: 'rgba(10, 132, 255, 0.2)' }}
+                >
+                  <Bot size={18} />
+                  Generate Deep AI Financial Review
+                </button>
+              ) : (
+                <div className="ai-recommendation-card" style={{ maxWidth: '100%' }}>
+                  <div className="ai-card-header">
+                    <div className="ai-card-icon">
+                      <Bot size={18} />
+                    </div>
+                    <span className="ai-card-title">FinPulse AI</span>
+                    {aiLoading && <Loader2 size={16} className="ai-spinner" />}
+                  </div>
+
+                  {aiLoading && (
+                    <div className="ai-skeleton">
+                      <div className="ai-skeleton-line long" />
+                      <div className="ai-skeleton-line medium" />
+                      <div className="ai-skeleton-line short" />
+                    </div>
+                  )}
+
+                  {aiError && (
+                    <div className="ai-fallback">
+                      <p className="insight-text">Failed to connect to AI. Please try again later.</p>
+                      <button className="btn btn-secondary btn-sm" onClick={handleGeneralAnalysis} style={{marginTop: '10px'}}>Retry</button>
+                    </div>
+                  )}
+
+                  {aiRecommendation && !aiLoading && (
+                    <div className="ai-content">
+                      {typedInsight && (
+                        <div className="ai-section">
+                          <span className="ai-section-label">💡 Key Insight</span>
+                          <p className="ai-section-text">
+                            {typedInsight}
+                            {typingPhase === 1 && <span className="ai-cursor" />}
+                          </p>
+                        </div>
+                      )}
+                      {typedAction && (
+                        <div className="ai-section">
+                          <span className="ai-section-label">🎯 Action Plan</span>
+                          <p className="ai-section-text">
+                            {typedAction}
+                            {typingPhase === 2 && <span className="ai-cursor" />}
+                          </p>
+                        </div>
+                      )}
+                      {typedEncouragement && (
+                        <div className="ai-section">
+                          <span className="ai-section-label">💪 Bottom Line</span>
+                          <p className="ai-section-text">
+                            {typedEncouragement}
+                            {typingPhase === 3 && <span className="ai-cursor" />}
+                          </p>
+                        </div>
+                      )}
+                      <button 
+                        className="btn btn-secondary btn-sm btn-full" 
+                        onClick={handleGeneralAnalysis} 
+                        style={{marginTop: '16px', background: 'transparent', border: '1px solid rgba(255,255,255,0.1)'}}
+                      >
+                        <RotateCcw size={14} style={{marginRight: '6px'}}/> Refresh Analysis
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Score History Chart */}

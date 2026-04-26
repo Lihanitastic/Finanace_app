@@ -351,3 +351,150 @@
   text-transform: none;
   letter-spacing: 0;
 }
+
+/* ===== AI Recommendation Card ===== */
+.ai-recommendation-card {
+  width: 100%;
+  max-width: 380px;
+  padding: var(--space-lg);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, rgba(10, 132, 255, 0.08) 0%, rgba(94, 92, 230, 0.06) 100%);
+  border: 1px solid rgba(10, 132, 255, 0.2);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  text-align: left;
+  position: relative;
+  overflow: hidden;
+}
+
+.ai-recommendation-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(10, 132, 255, 0.4), rgba(94, 92, 230, 0.4), transparent);
+}
+
+.ai-card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.ai-card-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, rgba(10, 132, 255, 0.25), rgba(94, 92, 230, 0.25));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-primary);
+}
+
+.ai-card-title {
+  font-size: var(--font-caption);
+  font-weight: 600;
+  color: var(--accent-primary);
+  letter-spacing: 0.02em;
+  flex: 1;
+}
+
+/* Spinner */
+.ai-spinner {
+  color: var(--accent-primary);
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Skeleton Loading */
+.ai-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: var(--space-sm) 0;
+}
+
+.ai-skeleton-line {
+  height: 12px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+.ai-skeleton-line.long { width: 100%; }
+.ai-skeleton-line.medium { width: 75%; }
+.ai-skeleton-line.short { width: 50%; }
+
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* AI Content Sections */
+.ai-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.ai-section {
+  padding: var(--space-sm) 0;
+}
+
+.ai-section + .ai-section {
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding-top: var(--space-md);
+}
+
+.ai-section-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  display: block;
+  margin-bottom: var(--space-xs);
+}
+
+.ai-section-text {
+  font-size: var(--font-caption);
+  color: var(--text-primary);
+  line-height: 1.65;
+  margin: 0;
+}
+
+/* Typing Cursor */
+.ai-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 14px;
+  background: var(--accent-primary);
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  animation: blink 0.7s step-end infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* Fallback */
+.ai-fallback {
+  padding: var(--space-sm) 0;
+}
+
+.ai-fallback .insight-text {
+  font-size: var(--font-caption);
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
